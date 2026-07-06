@@ -3,224 +3,184 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Steel Disk Impact Analysis on Glass</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/plotly.js/2.26.0/plotly.min.js"></script>
+    <title>Steel Disk Impact Analysis</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            font-family: 'Segoe UI', Tahoma, Geneva, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             padding: 20px;
         }
-
         .container {
-            max-width: 1400px;
+            max-width: 1600px;
             margin: 0 auto;
             background: white;
             border-radius: 12px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
             overflow: hidden;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
         }
-
         .header {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            padding: 30px;
+            padding: 40px;
             text-align: center;
         }
-
-        .header h1 {
-            font-size: 28px;
-            margin-bottom: 8px;
-        }
-
-        .header p {
-            font-size: 14px;
-            opacity: 0.9;
-        }
-
+        .header h1 { font-size: 32px; margin-bottom: 8px; }
+        .header p { font-size: 16px; opacity: 0.9; }
         .content {
             display: grid;
-            grid-template-columns: 1fr 320px;
-            gap: 20px;
+            grid-template-columns: 1fr 340px;
+            gap: 25px;
             padding: 30px;
         }
-
-        .visualization {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
-
-        .plot-container {
-            background: #f8f9fa;
+        .charts-wrapper { display: flex; flex-direction: column; gap: 20px; }
+        .chart-box {
+            background: #f5f7fa;
             border-radius: 8px;
             padding: 15px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e0e4e8;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
         }
-
-        #heatmap {
+        canvas { 
+            display: block;
             width: 100%;
-            height: 500px;
         }
-
-        #crossSection {
-            width: 100%;
-            height: 300px;
-        }
-
-        .controls {
-            display: flex;
-            flex-direction: column;
-            gap: 25px;
-            background: #f8f9fa;
-            padding: 25px;
-            border-radius: 8px;
-            height: fit-content;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        }
-
-        .control-group {
+        .heatmap-container { 
             display: flex;
             flex-direction: column;
             gap: 10px;
         }
-
-        .control-label {
-            font-weight: 600;
-            color: #333;
-            font-size: 13px;
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .control-section {
+            background: #f5f7fa;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #e0e4e8;
+        }
+        .slider-group {
+            margin-bottom: 20px;
+        }
+        .slider-group:last-child { margin-bottom: 0; }
+        .slider-label {
             display: flex;
             justify-content: space-between;
             align-items: center;
+            margin-bottom: 10px;
+            font-weight: 600;
+            font-size: 13px;
+            color: #333;
         }
-
-        .control-value {
-            background: #667eea;
+        .value-badge {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            padding: 3px 8px;
+            padding: 4px 10px;
             border-radius: 4px;
             font-size: 12px;
             font-weight: 700;
-            min-width: 50px;
+            min-width: 70px;
             text-align: center;
         }
-
         input[type="range"] {
             width: 100%;
-            height: 6px;
-            border-radius: 3px;
+            height: 8px;
+            border-radius: 4px;
             background: #ddd;
             outline: none;
             -webkit-appearance: none;
         }
-
         input[type="range"]::-webkit-slider-thumb {
             -webkit-appearance: none;
-            appearance: none;
-            width: 18px;
-            height: 18px;
+            width: 20px;
+            height: 20px;
             border-radius: 50%;
-            background: #667eea;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             cursor: pointer;
-            transition: all 0.2s;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
         }
-
-        input[type="range"]::-webkit-slider-thumb:hover {
-            background: #764ba2;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-        }
-
         input[type="range"]::-moz-range-thumb {
-            width: 18px;
-            height: 18px;
+            width: 20px;
+            height: 20px;
             border-radius: 50%;
-            background: #667eea;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             cursor: pointer;
             border: none;
-            transition: all 0.2s;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
         }
-
-        input[type="range"]::-moz-range-thumb:hover {
-            background: #764ba2;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-        }
-
-        .specs {
+        .specs-box {
             background: white;
-            padding: 15px;
-            border-radius: 6px;
+            padding: 18px;
+            border-radius: 8px;
             border-left: 4px solid #667eea;
+            font-size: 12px;
         }
-
         .specs-title {
             font-weight: 700;
             color: #333;
-            margin-bottom: 10px;
+            margin-bottom: 12px;
             font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
-
-        .spec-item {
-            font-size: 12px;
-            color: #666;
-            margin: 6px 0;
+        .spec-row {
             display: flex;
             justify-content: space-between;
+            margin: 8px 0;
+            color: #666;
         }
-
-        .spec-item strong {
-            color: #333;
-        }
-
+        .spec-row strong { color: #333; }
         .stats-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 10px;
+            gap: 12px;
             margin-top: 15px;
         }
-
-        .stat-box {
-            background: #f0f2ff;
-            padding: 12px;
+        .stat-card {
+            background: linear-gradient(135deg, #e8eeff 0%, #f0f2ff 100%);
+            padding: 14px;
             border-radius: 6px;
             text-align: center;
             border-bottom: 3px solid #667eea;
         }
-
         .stat-label {
             font-size: 11px;
             color: #666;
-            margin-bottom: 4px;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
         }
-
         .stat-value {
-            font-size: 16px;
+            font-size: 18px;
             font-weight: 700;
             color: #667eea;
         }
-
-        .unit {
-            font-size: 10px;
-            color: #999;
-            margin-left: 3px;
+        .scale-bar {
+            margin-top: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            font-size: 11px;
         }
-
-        @media (max-width: 1024px) {
-            .content {
-                grid-template-columns: 1fr;
-            }
-
-            .controls {
-                height: auto;
-            }
+        .scale-gradient {
+            height: 25px;
+            width: 100%;
+            background: linear-gradient(to right, #0d47a1, #1976d2, #42a5f5, #ffeb3b, #ff9800, #c62828);
+            border-radius: 3px;
+            border: 1px solid #999;
+        }
+        .scale-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 10px;
+            color: #666;
+        }
+        @media (max-width: 1200px) {
+            .content { grid-template-columns: 1fr; }
+            .sidebar { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
         }
     </style>
 </head>
@@ -232,75 +192,73 @@
         </div>
 
         <div class="content">
-            <div class="visualization">
-                <div class="plot-container">
-                    <div id="heatmap"></div>
+            <div class="charts-wrapper">
+                <div class="chart-box">
+                    <div class="heatmap-container">
+                        <canvas id="heatmapCanvas" width="800" height="500"></canvas>
+                        <div class="scale-bar">
+                            <div class="scale-gradient"></div>
+                            <div class="scale-labels">
+                                <span>0 MPa</span>
+                                <span>1000 MPa</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div class="plot-container">
-                    <div id="crossSection"></div>
+                <div class="chart-box">
+                    <canvas id="crossCanvas" width="800" height="300"></canvas>
                 </div>
             </div>
 
-            <div class="controls">
-                <div class="control-group">
-                    <div class="control-label">
-                        <span>Force</span>
-                        <span class="control-value"><span id="forceValue">1000</span> N</span>
-                    </div>
-                    <input type="range" id="forceSlider" min="100" max="5000" value="1000" step="100">
-                </div>
-
-                <div class="control-group">
-                    <div class="control-label">
-                        <span>Impact Repetitions</span>
-                        <span class="control-value"><span id="repetitionsValue">1</span> ×</span>
-                    </div>
-                    <input type="range" id="repetitionsSlider" min="1" max="100" value="1" step="1">
-                </div>
-
-                <div class="control-group">
-                    <div class="control-label">
-                        <span>Glass Hardness</span>
-                        <span class="control-value"><span id="hardnessValue">1.0</span> ×</span>
-                    </div>
-                    <input type="range" id="hardnessSlider" min="0.5" max="2.0" value="1.0" step="0.1">
-                </div>
-
-                <div class="control-group">
-                    <div class="control-label">
-                        <span>Tilt Angle</span>
-                        <span class="control-value"><span id="tiltValue">0</span>°</span>
-                    </div>
-                    <input type="range" id="tiltSlider" min="0" max="45" value="0" step="1">
-                </div>
-
-                <div class="specs">
-                    <div class="specs-title">MATERIAL SPECIFICATIONS</div>
-                    <div class="spec-item">
-                        <strong>Steel Disk:</strong>
-                        <span>R=30mm, t=0.5mm</span>
-                    </div>
-                    <div class="spec-item">
-                        <strong>Glass Surface:</strong>
-                        <span>R=300mm, t=1mm</span>
-                    </div>
-                    <div class="spec-item">
-                        <strong>Steel Density:</strong>
-                        <span>7850 kg/m³</span>
-                    </div>
-                    <div class="spec-item">
-                        <strong>Glass Type:</strong>
-                        <span>Hardened</span>
-                    </div>
-
-                    <div class="stats-grid">
-                        <div class="stat-box">
-                            <div class="stat-label">Contact Area</div>
-                            <div class="stat-value" id="contactArea">2.83<span class="unit">mm²</span></div>
+            <div class="sidebar">
+                <div class="control-section">
+                    <div class="slider-group">
+                        <div class="slider-label">
+                            <span>Impact Force</span>
+                            <span class="value-badge"><span id="forceVal">1000</span> N</span>
                         </div>
-                        <div class="stat-box">
+                        <input type="range" id="forceSlider" min="100" max="5000" value="1000" step="100">
+                    </div>
+
+                    <div class="slider-group">
+                        <div class="slider-label">
+                            <span>Repetitions</span>
+                            <span class="value-badge"><span id="repsVal">1</span> ×</span>
+                        </div>
+                        <input type="range" id="repsSlider" min="1" max="100" value="1" step="1">
+                    </div>
+
+                    <div class="slider-group">
+                        <div class="slider-label">
+                            <span>Glass Hardness</span>
+                            <span class="value-badge"><span id="hardVal">1.0</span> ×</span>
+                        </div>
+                        <input type="range" id="hardSlider" min="0.5" max="2.0" value="1.0" step="0.1">
+                    </div>
+
+                    <div class="slider-group">
+                        <div class="slider-label">
+                            <span>Tilt Angle</span>
+                            <span class="value-badge"><span id="tiltVal">0</span>°</span>
+                        </div>
+                        <input type="range" id="tiltSlider" min="0" max="45" value="0" step="1">
+                    </div>
+                </div>
+
+                <div class="specs-box">
+                    <div class="specs-title">Material Specs</div>
+                    <div class="spec-row"><strong>Steel Disk:</strong> <span>R=30mm</span></div>
+                    <div class="spec-row"><strong>Glass Surface:</strong> <span>R=300mm</span></div>
+                    <div class="spec-row"><strong>Steel E:</strong> <span>200 GPa</span></div>
+                    <div class="spec-row"><strong>Glass E:</strong> <span>70 GPa</span></div>
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-label">Contact Area</div>
+                            <div class="stat-value"><span id="areaVal">2.83</span> mm²</div>
+                        </div>
+                        <div class="stat-card">
                             <div class="stat-label">Max Stress</div>
-                            <div class="stat-value" id="maxStress">353.4<span class="unit">MPa</span></div>
+                            <div class="stat-value"><span id="stressVal">353</span> MPa</div>
                         </div>
                     </div>
                 </div>
@@ -309,318 +267,262 @@
     </div>
 
     <script>
-        // Material Properties
-        const STEEL_DISK = {
-            radius: 30,      // mm
-            thickness: 0.5,  // mm
-            youngsModulus: 200000,  // MPa
-            poissonRatio: 0.3
-        };
+        // Constants
+        const STEEL = { R: 30, t: 0.5, E: 200000, nu: 0.3 };
+        const GLASS = { R: 300, t: 1, E: 70000, nu: 0.22 };
+        const STRESS_MAX = 1000;
+        const GRID_SIZE = 100;
 
-        const GLASS_SURFACE = {
-            radius: 300,     // mm
-            thickness: 1,    // mm
-            youngsModulus: 70000,   // MPa
-            poissonRatio: 0.22
-        };
-
-        // Fixed scale for heatmap (0 to 1000 MPa)
-        const STRESS_SCALE_MIN = 0;
-        const STRESS_SCALE_MAX = 1000;
-
-        // Slider elements
+        // DOM Elements
         const forceSlider = document.getElementById('forceSlider');
-        const repetitionsSlider = document.getElementById('repetitionsSlider');
-        const hardnessSlider = document.getElementById('hardnessSlider');
+        const repsSlider = document.getElementById('repsSlider');
+        const hardSlider = document.getElementById('hardSlider');
         const tiltSlider = document.getElementById('tiltSlider');
 
-        // Value display elements
-        const forceValue = document.getElementById('forceValue');
-        const repetitionsValue = document.getElementById('repetitionsValue');
-        const hardnessValue = document.getElementById('hardnessValue');
-        const tiltValue = document.getElementById('tiltValue');
+        const forceVal = document.getElementById('forceVal');
+        const repsVal = document.getElementById('repsVal');
+        const hardVal = document.getElementById('hardVal');
+        const tiltVal = document.getElementById('tiltVal');
 
-        // Stats elements
-        const contactAreaElement = document.getElementById('contactArea');
-        const maxStressElement = document.getElementById('maxStress');
+        const areaVal = document.getElementById('areaVal');
+        const stressVal = document.getElementById('stressVal');
 
-        // Initialize
-        updateVisualization();
+        const heatmapCanvas = document.getElementById('heatmapCanvas');
+        const crossCanvas = document.getElementById('crossCanvas');
 
         // Event listeners
-        forceSlider.addEventListener('input', function() {
-            forceValue.textContent = this.value;
-            updateVisualization();
-        });
+        forceSlider.addEventListener('input', () => { forceVal.textContent = forceSlider.value; render(); });
+        repsSlider.addEventListener('input', () => { repsVal.textContent = repsSlider.value; render(); });
+        hardSlider.addEventListener('input', () => { hardVal.textContent = parseFloat(hardSlider.value).toFixed(1); render(); });
+        tiltSlider.addEventListener('input', () => { tiltVal.textContent = tiltSlider.value; render(); });
 
-        repetitionsSlider.addEventListener('input', function() {
-            repetitionsValue.textContent = this.value;
-            updateVisualization();
-        });
-
-        hardnessSlider.addEventListener('input', function() {
-            hardnessValue.textContent = parseFloat(this.value).toFixed(1);
-            updateVisualization();
-        });
-
-        tiltSlider.addEventListener('input', function() {
-            tiltValue.textContent = this.value;
-            updateVisualization();
-        });
-
-        function calculateContactArea(force, tiltAngle) {
-            // Hertzian contact calculation
-            const effectiveRadius = (STEEL_DISK.radius * GLASS_SURFACE.radius) / 
-                                   (STEEL_DISK.radius + GLASS_SURFACE.radius);
-            
-            // Modified for tilt angle (reduces contact area)
-            const tiltFactor = Math.cos(tiltAngle * Math.PI / 180);
-            
-            // Effective Young's modulus
-            const E_eff = 1 / ((1 - STEEL_DISK.poissonRatio**2) / STEEL_DISK.youngsModulus + 
-                               (1 - GLASS_SURFACE.poissonRatio**2) / GLASS_SURFACE.youngsModulus);
-            
-            // Contact radius using Hertzian formula
-            const contactRadius = Math.cbrt((3 * force * effectiveRadius) / (4 * E_eff)) * tiltFactor;
-            
-            return Math.PI * contactRadius ** 2;
+        // Physics calculations
+        function contactArea(F, angle) {
+            const R_eff = (STEEL.R * GLASS.R) / (STEEL.R + GLASS.R);
+            const E_eff = 1 / ((1 - STEEL.nu**2) / STEEL.E + (1 - GLASS.nu**2) / GLASS.E);
+            const tilt_factor = Math.cos(angle * Math.PI / 180);
+            const a = Math.cbrt((3 * F * R_eff) / (4 * E_eff)) * tilt_factor;
+            return Math.PI * a * a;
         }
 
-        function calculateStressDistribution(force, tiltAngle, hardness, repetitions, gridSize = 100) {
-            const contactArea = calculateContactArea(force, tiltAngle);
-            const contactRadius = Math.sqrt(contactArea / Math.PI);
-            
-            // Maximum contact stress (Hertzian)
-            const maxContactStress = (3 * force) / (2 * Math.PI * contactArea);
-            
-            // Apply hardness multiplier (higher hardness reduces stress)
-            const effectiveStress = maxContactStress / hardness;
-            
-            // Apply repetition factor (cumulative damage)
-            const cumulativeStress = effectiveStress * Math.sqrt(repetitions);
-            
-            // Create 2D stress distribution
-            const stressData = [];
-            const xRange = Array.from({length: gridSize}, (_, i) => 
-                -GLASS_SURFACE.radius/2 + (i * GLASS_SURFACE.radius) / gridSize);
-            const yRange = Array.from({length: gridSize}, (_, i) => 
-                -GLASS_SURFACE.radius/2 + (i * GLASS_SURFACE.radius) / gridSize);
-            
-            // Tilt angle affects stress distribution center
-            const tiltOffsetX = (tiltAngle * STEEL_DISK.radius) / 45;
-            
-            for (let i = 0; i < gridSize; i++) {
-                const row = [];
-                for (let j = 0; j < gridSize; j++) {
-                    const x = xRange[j];
-                    const y = yRange[i];
-                    
-                    // Distance from impact center (adjusted for tilt)
-                    const dist = Math.sqrt((x - tiltOffsetX)**2 + y**2);
-                    
-                    // Stress distribution following Hertzian approximation
-                    if (dist < contactRadius * 1.5) {
-                        // Gaussian-like distribution centered at contact
-                        const normalizedDist = dist / contactRadius;
-                        const stress = cumulativeStress * Math.exp(-normalizedDist**2 * 2);
-                        row.push(Math.max(0, stress));
-                    } else {
-                        row.push(0);
+        function maxStress(F, area, hardness, reps) {
+            const p = (3 * F) / (2 * Math.PI * area);
+            return (p / hardness) * Math.sqrt(reps);
+        }
+
+        function generateHeatmap(F, angle, hardness, reps) {
+            const area = contactArea(F, angle);
+            const radius = Math.sqrt(area / Math.PI);
+            const max_stress = maxStress(F, area, hardness, reps);
+            const tilt_offset = (angle * STEEL.R) / 45;
+
+            let data = [];
+            for (let i = 0; i < GRID_SIZE; i++) {
+                let row = [];
+                for (let j = 0; j < GRID_SIZE; j++) {
+                    const x = -GLASS.R/2 + (j * GLASS.R) / GRID_SIZE;
+                    const y = -GLASS.R/2 + (i * GLASS.R) / GRID_SIZE;
+                    const dist = Math.sqrt((x - tilt_offset)**2 + y**2);
+
+                    let stress = 0;
+                    if (dist < radius * 1.8) {
+                        const norm = dist / radius;
+                        stress = max_stress * Math.exp(-norm**2 * 1.5);
                     }
+                    row.push(Math.max(0, Math.min(stress, STRESS_MAX)));
                 }
-                stressData.push(row);
+                data.push(row);
+            }
+
+            return { data, radius, max_stress, area, tilt_offset };
+        }
+
+        function stressToColor(stress) {
+            const ratio = Math.min(stress / STRESS_MAX, 1);
+            let r, g, b;
+            
+            if (ratio < 0.167) {
+                // Dark blue to blue
+                const t = ratio / 0.167;
+                r = 13 + (25 - 13) * t;
+                g = 71 + (118 - 71) * t;
+                b = 161 + (210 - 161) * t;
+            } else if (ratio < 0.333) {
+                // Blue to light blue
+                const t = (ratio - 0.167) / 0.166;
+                r = 25 + (66 - 25) * t;
+                g = 118 + (165 - 118) * t;
+                b = 210 + (245 - 210) * t;
+            } else if (ratio < 0.5) {
+                // Light blue to cyan-green
+                const t = (ratio - 0.333) / 0.167;
+                r = 66 + (100 - 66) * t;
+                g = 165 + (200 - 165) * t;
+                b = 245 + (100 - 245) * t;
+            } else if (ratio < 0.667) {
+                // Cyan-green to yellow
+                const t = (ratio - 0.5) / 0.167;
+                r = 100 + (255 - 100) * t;
+                g = 200 + (235 - 200) * t;
+                b = 100 + (59 - 100) * t;
+            } else if (ratio < 0.833) {
+                // Yellow to orange
+                const t = (ratio - 0.667) / 0.166;
+                r = 255;
+                g = 235 + (152 - 235) * t;
+                b = 59 + (0 - 59) * t;
+            } else {
+                // Orange to red
+                const t = (ratio - 0.833) / 0.167;
+                r = 255 + (198 - 255) * t;
+                g = 152 + (46 - 152) * t;
+                b = 0 + (46 - 0) * t;
             }
             
-            return {
-                data: stressData,
-                contactRadius: contactRadius,
-                maxStress: cumulativeStress,
-                contactArea: contactArea,
-                tiltOffsetX: tiltOffsetX
-            };
+            return `rgb(${Math.round(r)}, ${Math.round(g)}, ${Math.round(b)})`;
         }
 
-        function updateVisualization() {
-            const force = parseFloat(forceSlider.value);
-            const repetitions = parseFloat(repetitionsSlider.value);
-            const hardness = parseFloat(hardnessSlider.value);
-            const tiltAngle = parseFloat(tiltSlider.value);
-            
-            // Calculate stress distribution
-            const stressAnalysis = calculateStressDistribution(force, tiltAngle, hardness, repetitions, 120);
-            
-            // Update stats
-            contactAreaElement.textContent = stressAnalysis.contactArea.toFixed(2);
-            maxStressElement.textContent = stressAnalysis.maxStress.toFixed(1);
-            
-            // Update heatmap
-            updateHeatmap(stressAnalysis, tiltAngle);
-            
-            // Update cross-section
-            updateCrossSection(stressAnalysis);
-        }
+        function renderHeatmap(canvas, result) {
+            const ctx = canvas.getContext('2d');
+            const w = canvas.width;
+            const h = canvas.height;
+            const cellW = w / GRID_SIZE;
+            const cellH = h / GRID_SIZE;
 
-        function updateHeatmap(stressAnalysis, tiltAngle) {
-            const stressData = stressAnalysis.data;
-            const gridSize = stressData.length;
-            
-            // Create x and y axes (in mm)
-            const xRange = Array.from({length: gridSize}, (_, i) => 
-                -GLASS_SURFACE.radius/2 + (i * GLASS_SURFACE.radius) / gridSize);
-            const yRange = Array.from({length: gridSize}, (_, i) => 
-                -GLASS_SURFACE.radius/2 + (i * GLASS_SURFACE.radius) / gridSize);
-            
-            // Create heatmap trace
-            const heatmapTrace = {
-                z: stressData,
-                x: xRange,
-                y: yRange,
-                type: 'heatmap',
-                colorscale: [
-                    [0, '#0d47a1'],      // Dark blue - low stress
-                    [0.25, '#1976d2'],   // Blue
-                    [0.5, '#42a5f5'],    // Light blue
-                    [0.65, '#64b5f6'],   // Lighter blue
-                    [0.75, '#ffeb3b'],   // Yellow
-                    [0.85, '#ff9800'],   // Orange
-                    [0.95, '#f44336'],   // Red
-                    [1, '#c62828']       // Dark red - high stress
-                ],
-                zmin: STRESS_SCALE_MIN,
-                zmax: STRESS_SCALE_MAX,
-                colorbar: {
-                    title: 'Stress (MPa)',
-                    thickness: 20,
-                    len: 0.7,
-                    x: 1.02
-                },
-                hovertemplate: 'X: %{x:.1f} mm<br>Y: %{y:.1f} mm<br>Stress: %{z:.1f} MPa<extra></extra>'
-            };
-            
-            // Add contact circle annotation
-            const contactRadius = stressAnalysis.contactRadius;
-            const tiltOffsetX = stressAnalysis.tiltOffsetX;
-            
-            const layout = {
-                title: {
-                    text: `Stress Heatmap on Glass Surface | Tilt: ${tiltAngle}°`,
-                    font: { size: 14 }
-                },
-                xaxis: { title: 'X (mm)', showgrid: true, zeroline: true },
-                yaxis: { title: 'Y (mm)', showgrid: true, zeroline: true },
-                width: null,
-                height: 500,
-                hovermode: 'closest',
-                margin: { b: 60, l: 60, r: 150, t: 60 },
-                shapes: [
-                    {
-                        type: 'circle',
-                        x0: tiltOffsetX - contactRadius,
-                        y0: -contactRadius,
-                        x1: tiltOffsetX + contactRadius,
-                        y1: contactRadius,
-                        line: {
-                            color: 'rgba(255, 255, 255, 0.8)',
-                            width: 2,
-                            dash: 'dash'
-                        },
-                        fillcolor: 'rgba(0, 0, 0, 0)'
-                    }
-                ]
-            };
-            
-            Plotly.newPlot('heatmap', [heatmapTrace], layout, {responsive: true});
-        }
-
-        function updateCrossSection(stressAnalysis) {
-            const stressData = stressAnalysis.data;
-            const gridSize = stressData.length;
-            const contactRadius = stressAnalysis.contactRadius;
-            
-            // Get center row for cross-section
-            const centerRow = Math.floor(gridSize / 2);
-            const crossSectionStress = stressData[centerRow];
-            
-            // Create x-axis (distance from center)
-            const xRange = Array.from({length: gridSize}, (_, i) => 
-                -GLASS_SURFACE.radius/2 + (i * GLASS_SURFACE.radius) / gridSize);
-            
-            // Create trace
-            const trace = {
-                x: xRange,
-                y: crossSectionStress,
-                type: 'scatter',
-                mode: 'lines',
-                name: 'Stress Distribution',
-                line: {
-                    color: '#667eea',
-                    width: 3
-                },
-                fill: 'tozeroy',
-                fillcolor: 'rgba(102, 126, 234, 0.2)',
-                hovertemplate: 'Position: %{x:.1f} mm<br>Stress: %{y:.1f} MPa<extra></extra>'
-            };
-            
-            // Add reference lines
-            const shapes = [
-                // Contact radius left
-                {
-                    type: 'line',
-                    x0: -contactRadius,
-                    y0: 0,
-                    x1: -contactRadius,
-                    y1: stressAnalysis.maxStress,
-                    line: { color: 'rgba(255, 152, 0, 0.5)', width: 2, dash: 'dot' }
-                },
-                // Contact radius right
-                {
-                    type: 'line',
-                    x0: contactRadius,
-                    y0: 0,
-                    x1: contactRadius,
-                    y1: stressAnalysis.maxStress,
-                    line: { color: 'rgba(255, 152, 0, 0.5)', width: 2, dash: 'dot' }
+            // Draw cells
+            for (let i = 0; i < GRID_SIZE; i++) {
+                for (let j = 0; j < GRID_SIZE; j++) {
+                    const stress = result.data[i][j];
+                    ctx.fillStyle = stressToColor(stress);
+                    ctx.fillRect(j * cellW, i * cellH, cellW, cellH);
                 }
-            ];
-            
-            const layout = {
-                title: {
-                    text: 'Cross-Section Stress Distribution',
-                    font: { size: 14 }
-                },
-                xaxis: { title: 'Distance from Center (mm)', zeroline: true, showgrid: true },
-                yaxis: { 
-                    title: 'Stress (MPa)',
-                    range: [0, STRESS_SCALE_MAX],
-                    showgrid: true
-                },
-                width: null,
-                height: 300,
-                hovermode: 'x unified',
-                margin: { b: 50, l: 60, r: 40, t: 50 },
-                shapes: shapes,
-                annotations: [
-                    {
-                        x: -contactRadius,
-                        y: stressAnalysis.maxStress * 0.95,
-                        text: `Contact Radius<br>${contactRadius.toFixed(2)} mm`,
-                        showarrow: true,
-                        arrowhead: 2,
-                        arrowsize: 1,
-                        arrowwidth: 2,
-                        arrowcolor: '#ff9800',
-                        ax: -40,
-                        ay: -30,
-                        font: { size: 10, color: '#ff9800' }
-                    }
-                ]
-            };
-            
-            Plotly.newPlot('crossSection', [trace], layout, {responsive: true});
+            }
+
+            // Draw title
+            ctx.fillStyle = '#333';
+            ctx.font = 'bold 14px Arial';
+            ctx.textAlign = 'left';
+            const angle = parseFloat(tiltSlider.value);
+            ctx.fillText(`Stress Heatmap (Tilt: ${angle}°)`, 10, h - 5);
         }
 
-        // Responsive resize
-        window.addEventListener('resize', updateVisualization);
+        function renderCrossSection(canvas, result) {
+            const ctx = canvas.getContext('2d');
+            const w = canvas.width;
+            const h = canvas.height;
+            const padding = 60;
+            const graphW = w - 2 * padding;
+            const graphH = h - 2 * padding;
+
+            // Clear and draw background
+            ctx.fillStyle = '#f5f7fa';
+            ctx.fillRect(0, 0, w, h);
+
+            // Draw grid
+            ctx.strokeStyle = '#e0e4e8';
+            ctx.lineWidth = 1;
+            for (let i = 0; i <= 5; i++) {
+                const x = padding + (graphW) * (i/5);
+                ctx.beginPath();
+                ctx.moveTo(x, padding);
+                ctx.lineTo(x, h - padding);
+                ctx.stroke();
+
+                const y = padding + (graphH) * (i/5);
+                ctx.beginPath();
+                ctx.moveTo(padding, y);
+                ctx.lineTo(w - padding, y);
+                ctx.stroke();
+            }
+
+            // Draw axes
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(padding, h - padding);
+            ctx.lineTo(w - padding, h - padding);
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.moveTo(padding, padding);
+            ctx.lineTo(padding, h - padding);
+            ctx.stroke();
+
+            // Get center row
+            const centerRow = Math.floor(GRID_SIZE / 2);
+            const crossData = result.data[centerRow];
+
+            // Draw profile
+            ctx.strokeStyle = '#667eea';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            for (let j = 0; j < GRID_SIZE; j++) {
+                const stress = crossData[j];
+                const x = padding + (graphW) * (j / GRID_SIZE);
+                const y = h - padding - (graphH) * (stress / STRESS_MAX);
+                if (j === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            }
+            ctx.stroke();
+
+            // Fill area under curve
+            ctx.fillStyle = 'rgba(102, 126, 234, 0.2)';
+            ctx.lineTo(w - padding, h - padding);
+            ctx.lineTo(padding, h - padding);
+            ctx.fill();
+
+            // Y-axis label
+            ctx.fillStyle = '#666';
+            ctx.font = '12px Arial';
+            ctx.textAlign = 'right';
+            for (let i = 0; i <= 5; i++) {
+                const stress = (STRESS_MAX * i) / 5;
+                const y = h - padding - (graphH) * (i / 5);
+                ctx.fillText(Math.round(stress), padding - 10, y + 4);
+            }
+
+            // X-axis label
+            ctx.textAlign = 'center';
+            for (let i = 0; i <= 5; i++) {
+                const dist = (-GLASS.R/2) + (GLASS.R * i / 5);
+                const x = padding + (graphW) * (i / 5);
+                ctx.fillText(Math.round(dist), x, h - padding + 20);
+            }
+
+            // Axis titles
+            ctx.font = 'bold 12px Arial';
+            ctx.fillStyle = '#333';
+            ctx.textAlign = 'center';
+            ctx.fillText('Cross-Section Stress Profile', w/2, 25);
+            ctx.fillText('Distance from Center (mm)', w/2, h - 5);
+            
+            ctx.save();
+            ctx.translate(15, h/2);
+            ctx.rotate(-Math.PI/2);
+            ctx.textAlign = 'center';
+            ctx.fillText('Stress (MPa)', 0, 0);
+            ctx.restore();
+        }
+
+        function render() {
+            const F = parseFloat(forceSlider.value);
+            const angle = parseFloat(tiltSlider.value);
+            const hardness = parseFloat(hardSlider.value);
+            const reps = parseFloat(repsSlider.value);
+
+            const result = generateHeatmap(F, angle, hardness, reps);
+
+            // Update stats
+            areaVal.textContent = result.area.toFixed(2);
+            stressVal.textContent = Math.round(result.max_stress);
+
+            // Render charts
+            renderHeatmap(heatmapCanvas, result);
+            renderCrossSection(crossCanvas, result);
+        }
+
+        // Initial render
+        render();
     </script>
 </body>
 </html>
