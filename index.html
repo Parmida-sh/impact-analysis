@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Steel Disk Impact Analysis on Glass</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/plotly.js/2.26.0/plotly.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .content {
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            gap: 20px;
+            padding: 30px;
+        }
+
+        .visualization {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .plot-container {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        #heatmap {
+            width: 100%;
+            height: 500px;
+        }
+
+        #crossSection {
+            width: 100%;
+            height: 300px;
+        }
+
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 8px;
+            height: fit-content;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .control-label {
+            font-weight: 600;
+            color: #333;
+            font-size: 13px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .control-value {
+            background: #667eea;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 700;
+            min-width: 50px;
+            text-align: center;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: #ddd;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #667eea;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        input[type="range"]::-webkit-slider-thumb:hover {
+            background: #764ba2;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #667eea;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        input[type="range"]::-moz-range-thumb:hover {
+            background: #764ba2;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .specs {
+            background: white;
+            padding: 15px;
+            border-radius: 6px;
+            border-left: 4px solid #667eea;
+        }
+
+        .specs-title {
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 13px;
+        }
+
+        .spec-item {
+            font-size: 12px;
+            color: #666;
+            margin: 6px 0;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .spec-item strong {
+            color: #333;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .stat-box {
+            background: #f0f2ff;
+            padding: 12px;
+            border-radius: 6px;
+            text-align: center;
+            border-bottom: 3px solid #667eea;
+        }
+
+        .stat-label {
+            font-size: 11px;
+            color: #666;
+            margin-bottom: 4px;
+        }
+
+        .stat-value {
+            font-size: 16px;
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        .unit {
+            font-size: 10px;
+            color: #999;
+            margin-left: 3px;
+        }
+
+        @media (max-width: 1024px) {
+            .content {
+                grid-template-columns: 1fr;
+            }
+
+            .controls {
+                height: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔬 Steel Disk Impact Analysis</h1>
+            <p>Interactive visualization of contact stress on hardened glass surface</p>
+        </div>
+
+        <div class="content">
+            <div class="visualization">
+                <div class="plot-container">
+                    <div id="heatmap"></div>
+                </div>
+                <div class="plot-container">
+                    <div id="crossSection"></div>
+                </div>
+            </div>
+
+            <div class="controls">
+                <div class="control-group">
+                    <div class="control-label">
+                        <span>Force</span>
+                        <span class="control-value"><span id="forceValue">1000</span> N</span>
+                    </div>
+                    <input type="range" id="forceSlider" min="100" max="5000" value="1000" step="100">
+                </div>
+
+                <div class="control-group">
+                    <div class="control-label">
+                        <span>Impact Repetitions</span>
+                        <span class="control-value"><span id="repetitionsValue">1</span> ×</span>
+                    </div>
+                    <input type="range" id="repetitionsSlider" min="1" max="100" value="1" step="1">
+                </div>
+
+                <div class="control-group">
+                    <div class="control-label">
+                        <span>Glass Hardness</span>
+                        <span class="control-value"><span id="hardnessValue">1.0</span> ×</span>
+                    </div>
+                    <input type="range" id="hardnessSlider" min="0.5" max="2.0" value="1.0" step="0.1">
+                </div>
+
+                <div class="control-group">
+                    <div class="control-label">
+                        <span>Tilt Angle</span>
+                        <span class="control-value"><span id="tiltValue">0</span>°</span>
+                    </div>
+                    <input type="range" id="tiltSlider" min="0" max="45" value="0" step="1">
+                </div>
+
+                <div class="specs">
+                    <div class="specs-title">MATERIAL SPECIFICATIONS</div>
+                    <div class="spec-item">
+                        <strong>Steel Disk:</strong>
+                        <span>R=30mm, t=0.5mm</span>
+                    </div>
+                    <div class="spec-item">
+                        <strong>Glass Surface:</strong>
+                        <span>R=300mm, t=1mm</span>
+                    </div>
+                    <div class="spec-item">
+                        <strong>Steel Density:</strong>
+                        <span>7850 kg/m³</span>
+                    </div>
+                    <div class="spec-item">
+                        <strong>Glass Type:</strong>
+                        <span>Hardened</span>
+                    </div>
+
+                    <div class="stats-grid">
+                        <div class="stat-box">
+                            <div class="stat-label">Contact Area</div>
+                            <div class="stat-value" id="contactArea">2.83<span class="unit">mm²</span></div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">Max Stress</div>
+                            <div class="stat-value" id="maxStress">353.4<span class="unit">MPa</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
