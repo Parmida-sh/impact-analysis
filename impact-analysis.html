@@ -42,15 +42,8 @@
             border: 1px solid #e0e4e8;
             box-shadow: 0 2px 8px rgba(0,0,0,0.08);
         }
-        canvas { 
-            display: block;
-            width: 100%;
-        }
-        .heatmap-container { 
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
+        svg { display: block; width: 100%; }
+        .heatmap-container { display: flex; flex-direction: column; gap: 10px; }
         .sidebar {
             display: flex;
             flex-direction: column;
@@ -178,10 +171,6 @@
             font-size: 10px;
             color: #666;
         }
-        @media (max-width: 1200px) {
-            .content { grid-template-columns: 1fr; }
-            .sidebar { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-        }
     </style>
 </head>
 <body>
@@ -195,7 +184,7 @@
             <div class="charts-wrapper">
                 <div class="chart-box">
                     <div class="heatmap-container">
-                        <canvas id="heatmapCanvas" width="800" height="500"></canvas>
+                        <svg id="heatmapSvg" viewBox="0 0 800 500" style="border: 1px solid #ccc;"></svg>
                         <div class="scale-bar">
                             <div class="scale-gradient"></div>
                             <div class="scale-labels">
@@ -206,7 +195,7 @@
                     </div>
                 </div>
                 <div class="chart-box">
-                    <canvas id="crossCanvas" width="800" height="300"></canvas>
+                    <svg id="crossSvg" viewBox="0 0 800 300" style="border: 1px solid #ccc;"></svg>
                 </div>
             </div>
 
@@ -267,13 +256,11 @@
     </div>
 
     <script>
-        // Constants
         const STEEL = { R: 30, t: 0.5, E: 200000, nu: 0.3 };
         const GLASS = { R: 300, t: 1, E: 70000, nu: 0.22 };
         const STRESS_MAX = 1000;
-        const GRID_SIZE = 100;
+        const GRID_SIZE = 60;
 
-        // DOM Elements
         const forceSlider = document.getElementById('forceSlider');
         const repsSlider = document.getElementById('repsSlider');
         const hardSlider = document.getElementById('hardSlider');
@@ -287,16 +274,11 @@
         const areaVal = document.getElementById('areaVal');
         const stressVal = document.getElementById('stressVal');
 
-        const heatmapCanvas = document.getElementById('heatmapCanvas');
-        const crossCanvas = document.getElementById('crossCanvas');
-
-        // Event listeners
         forceSlider.addEventListener('input', () => { forceVal.textContent = forceSlider.value; render(); });
         repsSlider.addEventListener('input', () => { repsVal.textContent = repsSlider.value; render(); });
         hardSlider.addEventListener('input', () => { hardVal.textContent = parseFloat(hardSlider.value).toFixed(1); render(); });
         tiltSlider.addEventListener('input', () => { tiltVal.textContent = tiltSlider.value; render(); });
 
-        // Physics calculations
         function contactArea(F, angle) {
             const R_eff = (STEEL.R * GLASS.R) / (STEEL.R + GLASS.R);
             const E_eff = 1 / ((1 - STEEL.nu**2) / STEEL.E + (1 - GLASS.nu**2) / GLASS.E);
@@ -339,169 +321,140 @@
 
         function stressToColor(stress) {
             const ratio = Math.min(stress / STRESS_MAX, 1);
-            let r, g, b;
-            
-            if (ratio < 0.167) {
-                // Dark blue to blue
-                const t = ratio / 0.167;
-                r = 13 + (25 - 13) * t;
-                g = 71 + (118 - 71) * t;
-                b = 161 + (210 - 161) * t;
-            } else if (ratio < 0.333) {
-                // Blue to light blue
-                const t = (ratio - 0.167) / 0.166;
-                r = 25 + (66 - 25) * t;
-                g = 118 + (165 - 118) * t;
-                b = 210 + (245 - 210) * t;
-            } else if (ratio < 0.5) {
-                // Light blue to cyan-green
-                const t = (ratio - 0.333) / 0.167;
-                r = 66 + (100 - 66) * t;
-                g = 165 + (200 - 165) * t;
-                b = 245 + (100 - 245) * t;
-            } else if (ratio < 0.667) {
-                // Cyan-green to yellow
-                const t = (ratio - 0.5) / 0.167;
-                r = 100 + (255 - 100) * t;
-                g = 200 + (235 - 200) * t;
-                b = 100 + (59 - 100) * t;
-            } else if (ratio < 0.833) {
-                // Yellow to orange
-                const t = (ratio - 0.667) / 0.166;
-                r = 255;
-                g = 235 + (152 - 235) * t;
-                b = 59 + (0 - 59) * t;
-            } else {
-                // Orange to red
-                const t = (ratio - 0.833) / 0.167;
-                r = 255 + (198 - 255) * t;
-                g = 152 + (46 - 152) * t;
-                b = 0 + (46 - 0) * t;
-            }
-            
-            return `rgb(${Math.round(r)}, ${Math.round(g)}, ${Math.round(b)})`;
+            const colors = [
+                '#0d47a1', '#1565c0', '#1976d2', '#1e88e5', '#2196f3',
+                '#42a5f5', '#64b5f6', '#90caf9', '#bbdefb', '#c8e6f5',
+                '#ffffcc', '#ffeb99', '#ffeb3b', '#fdd835', '#fbc02d',
+                '#ffb300', '#ffa000', '#ff9100', '#ff6f00', '#ff5722',
+                '#ff5722', '#ff5722', '#ff5722', '#ff5722', '#ff5722',
+                '#e64a19', '#d84315', '#c62828', '#b71c1c'
+            ];
+            const index = Math.floor(ratio * (colors.length - 1));
+            return colors[Math.min(index, colors.length - 1)];
         }
 
-        function renderHeatmap(canvas, result) {
-            const ctx = canvas.getContext('2d');
-            const w = canvas.width;
-            const h = canvas.height;
-            const cellW = w / GRID_SIZE;
-            const cellH = h / GRID_SIZE;
+        function renderHeatmap(result) {
+            const svg = document.getElementById('heatmapSvg');
+            svg.innerHTML = '';
 
-            // Draw cells
+            const cellW = 800 / GRID_SIZE;
+            const cellH = 500 / GRID_SIZE;
+
             for (let i = 0; i < GRID_SIZE; i++) {
                 for (let j = 0; j < GRID_SIZE; j++) {
                     const stress = result.data[i][j];
-                    ctx.fillStyle = stressToColor(stress);
-                    ctx.fillRect(j * cellW, i * cellH, cellW, cellH);
+                    const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                    rect.setAttribute('x', j * cellW);
+                    rect.setAttribute('y', i * cellH);
+                    rect.setAttribute('width', cellW);
+                    rect.setAttribute('height', cellH);
+                    rect.setAttribute('fill', stressToColor(stress));
+                    rect.setAttribute('stroke', 'none');
+                    svg.appendChild(rect);
                 }
             }
 
-            // Draw title
-            ctx.fillStyle = '#333';
-            ctx.font = 'bold 14px Arial';
-            ctx.textAlign = 'left';
             const angle = parseFloat(tiltSlider.value);
-            ctx.fillText(`Stress Heatmap (Tilt: ${angle}°)`, 10, h - 5);
+            const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+            text.setAttribute('x', '10');
+            text.setAttribute('y', '20');
+            text.setAttribute('font-size', '14');
+            text.setAttribute('font-weight', 'bold');
+            text.setAttribute('fill', '#333');
+            text.textContent = `Stress Heatmap (Tilt: ${angle}°)`;
+            svg.appendChild(text);
         }
 
-        function renderCrossSection(canvas, result) {
-            const ctx = canvas.getContext('2d');
-            const w = canvas.width;
-            const h = canvas.height;
+        function renderCrossSection(result) {
+            const svg = document.getElementById('crossSvg');
+            svg.innerHTML = '';
+
             const padding = 60;
-            const graphW = w - 2 * padding;
-            const graphH = h - 2 * padding;
+            const graphW = 800 - 2 * padding;
+            const graphH = 300 - 2 * padding;
 
-            // Clear and draw background
-            ctx.fillStyle = '#f5f7fa';
-            ctx.fillRect(0, 0, w, h);
+            const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
 
-            // Draw grid
-            ctx.strokeStyle = '#e0e4e8';
-            ctx.lineWidth = 1;
+            const bg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+            bg.setAttribute('width', '800');
+            bg.setAttribute('height', '300');
+            bg.setAttribute('fill', '#f5f7fa');
+            g.appendChild(bg);
+
             for (let i = 0; i <= 5; i++) {
+                const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
                 const x = padding + (graphW) * (i/5);
-                ctx.beginPath();
-                ctx.moveTo(x, padding);
-                ctx.lineTo(x, h - padding);
-                ctx.stroke();
+                line.setAttribute('x1', x);
+                line.setAttribute('y1', padding);
+                line.setAttribute('x2', x);
+                line.setAttribute('y2', 300 - padding);
+                line.setAttribute('stroke', '#e0e4e8');
+                line.setAttribute('stroke-width', '1');
+                g.appendChild(line);
 
+                const line2 = document.createElementNS('http://www.w3.org/2000/svg', 'line');
                 const y = padding + (graphH) * (i/5);
-                ctx.beginPath();
-                ctx.moveTo(padding, y);
-                ctx.lineTo(w - padding, y);
-                ctx.stroke();
+                line2.setAttribute('x1', padding);
+                line2.setAttribute('y1', y);
+                line2.setAttribute('x2', 800 - padding);
+                line2.setAttribute('y2', y);
+                line2.setAttribute('stroke', '#e0e4e8');
+                line2.setAttribute('stroke-width', '1');
+                g.appendChild(line2);
             }
 
-            // Draw axes
-            ctx.strokeStyle = '#333';
-            ctx.lineWidth = 2;
-            ctx.beginPath();
-            ctx.moveTo(padding, h - padding);
-            ctx.lineTo(w - padding, h - padding);
-            ctx.stroke();
+            const xAxis = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            xAxis.setAttribute('x1', padding);
+            xAxis.setAttribute('y1', 300 - padding);
+            xAxis.setAttribute('x2', 800 - padding);
+            xAxis.setAttribute('y2', 300 - padding);
+            xAxis.setAttribute('stroke', '#333');
+            xAxis.setAttribute('stroke-width', '2');
+            g.appendChild(xAxis);
 
-            ctx.beginPath();
-            ctx.moveTo(padding, padding);
-            ctx.lineTo(padding, h - padding);
-            ctx.stroke();
+            const yAxis = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            yAxis.setAttribute('x1', padding);
+            yAxis.setAttribute('y1', padding);
+            yAxis.setAttribute('x2', padding);
+            yAxis.setAttribute('y2', 300 - padding);
+            yAxis.setAttribute('stroke', '#333');
+            yAxis.setAttribute('stroke-width', '2');
+            g.appendChild(yAxis);
 
-            // Get center row
             const centerRow = Math.floor(GRID_SIZE / 2);
             const crossData = result.data[centerRow];
 
-            // Draw profile
-            ctx.strokeStyle = '#667eea';
-            ctx.lineWidth = 3;
-            ctx.beginPath();
+            let pathD = '';
             for (let j = 0; j < GRID_SIZE; j++) {
                 const stress = crossData[j];
                 const x = padding + (graphW) * (j / GRID_SIZE);
-                const y = h - padding - (graphH) * (stress / STRESS_MAX);
-                if (j === 0) ctx.moveTo(x, y);
-                else ctx.lineTo(x, y);
-            }
-            ctx.stroke();
-
-            // Fill area under curve
-            ctx.fillStyle = 'rgba(102, 126, 234, 0.2)';
-            ctx.lineTo(w - padding, h - padding);
-            ctx.lineTo(padding, h - padding);
-            ctx.fill();
-
-            // Y-axis label
-            ctx.fillStyle = '#666';
-            ctx.font = '12px Arial';
-            ctx.textAlign = 'right';
-            for (let i = 0; i <= 5; i++) {
-                const stress = (STRESS_MAX * i) / 5;
-                const y = h - padding - (graphH) * (i / 5);
-                ctx.fillText(Math.round(stress), padding - 10, y + 4);
+                const y = 300 - padding - (graphH) * (stress / STRESS_MAX);
+                pathD += (j === 0 ? 'M' : 'L') + x + ',' + y;
             }
 
-            // X-axis label
-            ctx.textAlign = 'center';
-            for (let i = 0; i <= 5; i++) {
-                const dist = (-GLASS.R/2) + (GLASS.R * i / 5);
-                const x = padding + (graphW) * (i / 5);
-                ctx.fillText(Math.round(dist), x, h - padding + 20);
-            }
+            const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            path.setAttribute('d', pathD);
+            path.setAttribute('stroke', '#667eea');
+            path.setAttribute('stroke-width', '3');
+            path.setAttribute('fill', 'none');
+            g.appendChild(path);
 
-            // Axis titles
-            ctx.font = 'bold 12px Arial';
-            ctx.fillStyle = '#333';
-            ctx.textAlign = 'center';
-            ctx.fillText('Cross-Section Stress Profile', w/2, 25);
-            ctx.fillText('Distance from Center (mm)', w/2, h - 5);
-            
-            ctx.save();
-            ctx.translate(15, h/2);
-            ctx.rotate(-Math.PI/2);
-            ctx.textAlign = 'center';
-            ctx.fillText('Stress (MPa)', 0, 0);
-            ctx.restore();
+            const fillPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            fillPath.setAttribute('d', pathD + 'L' + (800-padding) + ',' + (300-padding) + 'L' + padding + ',' + (300-padding) + 'Z');
+            fillPath.setAttribute('fill', 'rgba(102, 126, 234, 0.2)');
+            g.appendChild(fillPath);
+
+            svg.appendChild(g);
+
+            const title = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+            title.setAttribute('x', '400');
+            title.setAttribute('y', '25');
+            title.setAttribute('text-anchor', 'middle');
+            title.setAttribute('font-size', '14');
+            title.setAttribute('font-weight', 'bold');
+            title.setAttribute('fill', '#333');
+            title.textContent = 'Cross-Section Stress Profile';
+            svg.appendChild(title);
         }
 
         function render() {
@@ -512,16 +465,13 @@
 
             const result = generateHeatmap(F, angle, hardness, reps);
 
-            // Update stats
             areaVal.textContent = result.area.toFixed(2);
             stressVal.textContent = Math.round(result.max_stress);
 
-            // Render charts
-            renderHeatmap(heatmapCanvas, result);
-            renderCrossSection(crossCanvas, result);
+            renderHeatmap(result);
+            renderCrossSection(result);
         }
 
-        // Initial render
         render();
     </script>
 </body>
