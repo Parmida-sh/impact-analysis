@@ -3,311 +3,195 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Steel Disk Impact Analysis on Glass</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/plotly.js/2.26.0/plotly.min.js"></script>
+    <title>Steel Disk Wear on Glass</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
-            min-height: 100vh;
-            padding: 20px;
-        }
-
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            overflow: hidden;
-        }
-
-        .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 30px;
-            text-align: center;
-        }
-
-        .header h1 {
-            font-size: 28px;
-            margin-bottom: 8px;
-        }
-
-        .header p {
-            font-size: 14px;
-            opacity: 0.9;
-        }
-
-        .content {
-            display: grid;
-            grid-template-columns: 1fr 300px;
-            gap: 20px;
-            padding: 30px;
-        }
-
-        .visualization {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
-
-        .plot-container {
-            background: #f8f9fa;
-            border-radius: 8px;
-            padding: 15px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        }
-
-        #heatmap {
-            width: 100%;
-            height: 500px;
-        }
-
-        #crossSection {
-            width: 100%;
-            height: 300px;
-        }
-
-        .controls {
-            display: flex;
-            flex-direction: column;
-            gap: 25px;
-            background: #f8f9fa;
-            padding: 25px;
-            border-radius: 8px;
-            height: fit-content;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        }
-
-        .control-group {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        .control-label {
-            font-weight: 600;
-            color: #333;
-            font-size: 13px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .control-value {
-            background: #667eea;
-            color: white;
-            padding: 3px 8px;
-            border-radius: 4px;
-            font-size: 12px;
-            font-weight: 700;
-            min-width: 50px;
-            text-align: center;
-        }
-
-        input[type="range"] {
-            width: 100%;
-            height: 6px;
-            border-radius: 3px;
-            background: #ddd;
-            outline: none;
-            -webkit-appearance: none;
-        }
-
-        input[type="range"]::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 18px;
-            height: 18px;
-            border-radius: 50%;
-            background: #667eea;
-            cursor: pointer;
-            transition: all 0.2s;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-        }
-
-        input[type="range"]::-webkit-slider-thumb:hover {
-            background: #764ba2;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-        }
-
-        input[type="range"]::-moz-range-thumb {
-            width: 18px;
-            height: 18px;
-            border-radius: 50%;
-            background: #667eea;
-            cursor: pointer;
-            border: none;
-            transition: all 0.2s;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-        }
-
-        input[type="range"]::-moz-range-thumb:hover {
-            background: #764ba2;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-        }
-
-        .specs {
-            background: white;
-            padding: 15px;
-            border-radius: 6px;
-            border-left: 4px solid #667eea;
-        }
-
-        .specs-title {
-            font-weight: 700;
-            color: #333;
-            margin-bottom: 10px;
-            font-size: 13px;
-        }
-
-        .spec-item {
-            font-size: 12px;
-            color: #666;
-            margin: 6px 0;
-            display: flex;
-            justify-content: space-between;
-        }
-
-        .spec-item strong {
-            color: #333;
-        }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin-top: 15px;
-        }
-
-        .stat-box {
-            background: #f0f2ff;
-            padding: 12px;
-            border-radius: 6px;
-            text-align: center;
-            border-bottom: 3px solid #667eea;
-        }
-
-        .stat-label {
-            font-size: 11px;
-            color: #666;
-            margin-bottom: 4px;
-        }
-
-        .stat-value {
-            font-size: 16px;
-            font-weight: 700;
-            color: #667eea;
-        }
-
-        .unit {
-            font-size: 10px;
-            color: #999;
-            margin-left: 3px;
-        }
-
-        @media (max-width: 1024px) {
-            .content {
-                grid-template-columns: 1fr;
-            }
-
-            .controls {
-                height: auto;
-            }
-        }
+        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background: #f0f0f0; }
+        .container { max-width: 1400px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 0 20px rgba(0,0,0,0.1); }
+        h1 { text-align: center; color: #333; margin-bottom: 20px; }
+        .content { display: grid; grid-template-columns: 1fr 300px; gap: 20px; }
+        .charts { display: grid; grid-template-rows: 400px 350px; gap: 15px; }
+        .chart { background: #fafafa; border-radius: 6px; border: 1px solid #ddd; }
+        .panel { background: #f9f9f9; padding: 15px; border-radius: 6px; border: 1px solid #ddd; }
+        .param { margin-bottom: 15px; }
+        .param-label { font-size: 12px; font-weight: bold; display: flex; justify-content: space-between; margin-bottom: 5px; }
+        .param-value { color: #0066cc; font-weight: bold; }
+        input[type="range"] { width: 100%; }
+        button { width: 100%; padding: 10px; margin-top: 10px; background: #0066cc; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        button:hover { background: #0052a3; }
+        .info { background: #e8f4f8; padding: 10px; border-radius: 4px; margin-top: 15px; font-size: 12px; line-height: 1.5; }
+        .info-label { font-weight: bold; }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="header">
-            <h1>🔬 Steel Disk Impact Analysis</h1>
-            <p>Interactive visualization of contact stress on hardened glass surface</p>
-        </div>
-
+        <h1>Steel Disk Wear Analysis on Glass Surface</h1>
         <div class="content">
-            <div class="visualization">
-                <div class="plot-container">
-                    <div id="heatmap"></div>
-                </div>
-                <div class="plot-container">
-                    <div id="crossSection"></div>
-                </div>
+            <div class="charts">
+                <div id="wear2d" class="chart"></div>
+                <div id="wearProfile" class="chart"></div>
             </div>
-
-            <div class="controls">
-                <div class="control-group">
-                    <div class="control-label">
-                        <span>Force</span>
-                        <span class="control-value"><span id="forceValue">1000</span> N</span>
+            <div class="panel">
+                <div class="param">
+                    <div class="param-label">
+                        Wear Rate Multiplier
+                        <span class="param-value" id="wearLabel">1.0</span>
                     </div>
-                    <input type="range" id="forceSlider" min="100" max="5000" value="1000" step="100">
+                    <input type="range" id="wearSlider" min="0.5" max="2.0" step="0.1" value="1.0">
                 </div>
-
-                <div class="control-group">
-                    <div class="control-label">
-                        <span>Impact Repetitions</span>
-                        <span class="control-value"><span id="repetitionsValue">1</span> ×</span>
+                <div class="param">
+                    <div class="param-label">
+                        Friction Coefficient
+                        <span class="param-value" id="fricLabel">0.5</span>
                     </div>
-                    <input type="range" id="repetitionsSlider" min="1" max="100" value="1" step="1">
+                    <input type="range" id="fricSlider" min="0.1" max="1.0" step="0.05" value="0.5">
                 </div>
-
-                <div class="control-group">
-                    <div class="control-label">
-                        <span>Glass Hardness</span>
-                        <span class="control-value"><span id="hardnessValue">1.0</span> ×</span>
-                    </div>
-                    <input type="range" id="hardnessSlider" min="0.5" max="2.0" value="1.0" step="0.1">
-                </div>
-
-                <div class="control-group">
-                    <div class="control-label">
-                        <span>Tilt Angle</span>
-                        <span class="control-value"><span id="tiltValue">0</span>°</span>
-                    </div>
-                    <input type="range" id="tiltSlider" min="0" max="45" value="0" step="1">
-                </div>
-
-                <div class="specs">
-                    <div class="specs-title">MATERIAL SPECIFICATIONS</div>
-                    <div class="spec-item">
-                        <strong>Steel Disk:</strong>
-                        <span>R=30mm, t=0.5mm</span>
-                    </div>
-                    <div class="spec-item">
-                        <strong>Glass Surface:</strong>
-                        <span>R=300mm, t=1mm</span>
-                    </div>
-                    <div class="spec-item">
-                        <strong>Steel Density:</strong>
-                        <span>7850 kg/m³</span>
-                    </div>
-                    <div class="spec-item">
-                        <strong>Glass Type:</strong>
-                        <span>Hardened</span>
-                    </div>
-
-                    <div class="stats-grid">
-                        <div class="stat-box">
-                            <div class="stat-label">Contact Area</div>
-                            <div class="stat-value" id="contactArea">2.83<span class="unit">mm²</span></div>
-                        </div>
-                        <div class="stat-box">
-                            <div class="stat-label">Max Stress</div>
-                            <div class="stat-value" id="maxStress">353.4<span class="unit">MPa</span></div>
-                        </div>
+                <button onclick="updateCharts()">Update Analysis</button>
+                <button onclick="resetParams()">Reset</button>
+                <div class="info">
+                    <div class="info-label">Parameters:</div>
+                    Steel Disk: 15mm radius, 3mm thick, 60 HRC<br>
+                    Glass: 120mm radius, 1mm thick, Gorilla<br>
+                    Force: 20 kN<br>
+                    Impacts: 100<br>
+                    Angle: Perpendicular<br><br>
+                    <div id="stats" style="background: white; padding: 8px; border-radius: 3px; margin-top: 8px;">
+                        Max Wear: -- μm<br>
+                        Avg Wear: -- μm
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <script src="script.js"></script>
+    <script>
+        const DISK_RADIUS = 15;
+        const GLASS_RADIUS = 120;
+        const FORCE = 20000;
+        const IMPACTS = 100;
+        const HARDNESS = 9;
+
+        function generateWearMap(wearRate, friction) {
+            const points = 60;
+            const z = [];
+            const contactPressure = FORCE / (Math.PI * DISK_RADIUS * DISK_RADIUS);
+            const baseWear = (IMPACTS * wearRate * contactPressure / 50000) * (1 + friction * 0.5);
+
+            for (let i = 0; i < points; i++) {
+                const row = [];
+                for (let j = 0; j < points; j++) {
+                    const x = (i - points/2) * (GLASS_RADIUS * 2 / points);
+                    const y = (j - points/2) * (GLASS_RADIUS * 2 / points);
+                    const dist = Math.sqrt(x * x + y * y);
+
+                    let wear = 0;
+                    if (dist <= DISK_RADIUS) {
+                        wear = baseWear * Math.exp(-(dist * dist) / (2 * (DISK_RADIUS / 2) ** 2));
+                    } else if (dist <= DISK_RADIUS * 2.5) {
+                        const decay = (dist - DISK_RADIUS) / (DISK_RADIUS * 1.5);
+                        wear = baseWear * Math.exp(-decay * decay) * 0.2;
+                    }
+
+                    wear = Math.max(0, wear / (HARDNESS / 5));
+                    row.push(Math.min(wear, 100));
+                }
+                z.push(row);
+            }
+            return z;
+        }
+
+        function generateWearProfile(wearRate, friction) {
+            const points = 120;
+            const distances = [];
+            const wears = [];
+            const contactPressure = FORCE / (Math.PI * DISK_RADIUS * DISK_RADIUS);
+            const baseWear = (IMPACTS * wearRate * contactPressure / 50000) * (1 + friction * 0.5);
+
+            for (let i = 0; i < points; i++) {
+                const dist = (i / points) * (GLASS_RADIUS * 1.5);
+                distances.push(dist);
+
+                let wear = 0;
+                if (dist <= DISK_RADIUS) {
+                    wear = baseWear * Math.exp(-(dist * dist) / (2 * (DISK_RADIUS / 2) ** 2));
+                } else if (dist <= DISK_RADIUS * 2.5) {
+                    const decay = (dist - DISK_RADIUS) / (DISK_RADIUS * 1.5);
+                    wear = baseWear * Math.exp(-decay * decay) * 0.2;
+                }
+
+                wear = Math.max(0, wear / (HARDNESS / 5));
+                wears.push(Math.min(wear, 100));
+            }
+
+            return { distances, wears };
+        }
+
+        function updateCharts() {
+            const wearRate = parseFloat(document.getElementById('wearSlider').value);
+            const friction = parseFloat(document.getElementById('fricSlider').value);
+
+            document.getElementById('wearLabel').textContent = wearRate.toFixed(1);
+            document.getElementById('fricLabel').textContent = friction.toFixed(2);
+
+            // 2D Wear Map
+            const z = generateWearMap(wearRate, friction);
+            const maxWear = Math.max(...z.map(row => Math.max(...row)));
+            const avgWear = z.flat().reduce((a, b) => a + b) / (z.length * z[0].length);
+
+            const trace2d = {
+                z: z,
+                type: 'heatmap',
+                colorscale: [
+                    [0, 'rgb(49, 54, 149)'],
+                    [0.25, 'rgb(69, 117, 180)'],
+                    [0.5, 'rgb(171, 217, 233)'],
+                    [0.75, 'rgb(254, 224, 144)'],
+                    [1, 'rgb(244, 109, 67)']
+                ],
+                zmin: 0,
+                zmax: 100,
+                colorbar: { title: 'μm' }
+            };
+
+            Plotly.newPlot('wear2d', [trace2d], {
+                title: 'Wear Depth Distribution (Top View)',
+                xaxis: { title: 'X (mm)' },
+                yaxis: { title: 'Y (mm)' },
+                height: 400,
+                margin: { l: 50, r: 80, t: 40, b: 40 }
+            }, { responsive: true });
+
+            // Profile
+            const prof = generateWearProfile(wearRate, friction);
+            const traceProfile = {
+                x: prof.distances,
+                y: prof.wears,
+                type: 'scatter',
+                mode: 'lines',
+                line: { color: 'rgb(244, 109, 67)', width: 3 },
+                fill: 'tozeroy',
+                fillcolor: 'rgba(244, 109, 67, 0.3)'
+            };
+
+            Plotly.newPlot('wearProfile', [traceProfile], {
+                title: 'Cross-Section Wear Profile',
+                xaxis: { title: 'Distance from Center (mm)' },
+                yaxis: { title: 'Wear Depth (μm)' },
+                height: 350,
+                margin: { l: 50, r: 40, t: 40, b: 40 }
+            }, { responsive: true });
+
+            document.getElementById('stats').innerHTML = 
+                `Max Wear: ${maxWear.toFixed(2)} μm<br>Avg Wear: ${avgWear.toFixed(2)} μm`;
+        }
+
+        function resetParams() {
+            document.getElementById('wearSlider').value = 1.0;
+            document.getElementById('fricSlider').value = 0.5;
+            updateCharts();
+        }
+
+        updateCharts();
+    </script>
 </body>
 </html>
