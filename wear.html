@@ -1,53 +1,64 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Steel Disk Wear</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Steel Disk Wear Analysis</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        body { font-family: Arial; margin: 0; padding: 20px; background: #f5f5f5; }
-        .container { max-width: 1200px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        h1 { text-align: center; color: #333; margin-bottom: 30px; }
-        .main { display: grid; grid-template-columns: 1fr 300px; gap: 20px; }
-        .charts { display: grid; grid-template-rows: auto auto; gap: 20px; }
-        .chart-box { background: #f9f9f9; padding: 15px; border-radius: 6px; border: 1px solid #ddd; position: relative; height: 350px; }
-        .controls { background: #f9f9f9; padding: 20px; border-radius: 6px; border: 1px solid #ddd; height: fit-content; }
-        .specs { background: #e8f4f8; padding: 12px; border-radius: 4px; margin-bottom: 15px; font-size: 12px; line-height: 1.6; }
-        .spec-line { margin: 3px 0; }
-        .label { font-weight: bold; margin: 12px 0 5px 0; font-size: 13px; }
-        input[type="range"] { width: 100%; margin: 8px 0; }
-        .value-display { display: inline-block; background: #0066cc; color: white; padding: 2px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
-        button { width: 100%; padding: 10px; margin: 8px 0; border: none; background: #0066cc; color: white; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial; background: #f0f0f0; padding: 20px; }
+        .container { max-width: 1200px; margin: 0 auto; background: white; border-radius: 8px; padding: 20px; }
+        h1 { text-align: center; margin-bottom: 20px; }
+        .content { display: grid; grid-template-columns: 1fr 250px; gap: 20px; }
+        .canvas-container { background: #fafafa; padding: 10px; border-radius: 6px; margin-bottom: 15px; }
+        canvas { max-width: 100%; }
+        .controls { background: #f9f9f9; padding: 15px; border-radius: 6px; border: 1px solid #ddd; }
+        .param { margin-bottom: 15px; }
+        .param-label { font-weight: bold; font-size: 13px; margin-bottom: 5px; }
+        .param-value { color: #0066cc; font-weight: bold; font-size: 14px; }
+        input[type="range"] { width: 100%; height: 6px; border-radius: 3px; background: #ddd; outline: none; }
+        button { width: 100%; padding: 10px; margin-top: 8px; border: none; border-radius: 4px; background: #0066cc; color: white; font-weight: bold; cursor: pointer; }
         button:hover { background: #0052a3; }
-        .stats { background: #fffacd; padding: 10px; border-radius: 4px; font-size: 12px; margin-top: 15px; line-height: 1.5; }
+        .info { font-size: 11px; margin-top: 15px; padding: 10px; background: #fffacd; border-radius: 4px; }
+        .wear-map { width: 100%; height: 300px; }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>⚙️ Steel Disk Wear on Glass Surface</h1>
-        <div class="main">
-            <div class="charts">
-                <div class="chart-box">
-                    <canvas id="wearChart"></canvas>
+        <h1>Steel Disk Wear on Glass - 15mm disk, 120mm glass, 20kN, 100 impacts</h1>
+        
+        <div class="content">
+            <div>
+                <div class="canvas-container">
+                    <canvas id="wearMap" class="wear-map"></canvas>
                 </div>
-                <div class="chart-box">
+                <div class="canvas-container">
                     <canvas id="profileChart"></canvas>
                 </div>
             </div>
+
             <div class="controls">
-                <div class="specs">
-                    <div class="spec-line"><strong>Steel Disk:</strong> 15mm R, 3mm T, 60 HRC</div>
-                    <div class="spec-line"><strong>Glass:</strong> 120mm R, 1mm T, Gorilla</div>
-                    <div class="spec-line"><strong>Force:</strong> 20 kN</div>
-                    <div class="spec-line"><strong>Impacts:</strong> 100</div>
-                    <div class="spec-line"><strong>Angle:</strong> Perpendicular</div>
+                <div class="param">
+                    <div class="param-label">Wear Rate</div>
+                    <input type="range" id="wearRate" min="0.5" max="3" step="0.1" value="1">
+                    <div class="param-value" id="wearVal">1.0x</div>
                 </div>
-                <div class="label">Wear Rate <span class="value-display" id="wearValDisplay">1.0x</span></div>
-                <input type="range" id="wearRate" min="0.5" max="3" value="1.0" step="0.1">
-                <div class="label">Friction <span class="value-display" id="fricValDisplay">0.5</span></div>
-                <input type="range" id="friction" min="0.1" max="1" value="0.5" step="0.05">
+
+                <div class="param">
+                    <div class="param-label">Friction Coeff</div>
+                    <input type="range" id="friction" min="0.1" max="1" step="0.05" value="0.5">
+                    <div class="param-value" id="fricVal">0.50</div>
+                </div>
+
                 <button onclick="updateCharts()">Update</button>
-                <button onclick="resetValues()">Reset</button>
-                <div class="stats" id="stats">Max Wear: 0 μm<br>Avg Wear: 0 μm<br>Volume Loss: 0 mm³</div>
+                <button onclick="reset()">Reset</button>
+
+                <div class="info">
+                    <strong>Max Wear:</strong> <span id="maxWear">0</span> μm<br>
+                    <strong>Avg Wear:</strong> <span id="avgWear">0</span> μm<br>
+                    <strong>Volume Loss:</strong> <span id="volLoss">0</span> mm³
+                </div>
             </div>
         </div>
     </div>
@@ -57,171 +68,157 @@
         const GLASS_R = 120;
         const FORCE = 20000;
         const IMPACTS = 100;
-        const GORILLA_HARDNESS = 9;
-        
-        let wearChart = null;
-        let profileChart = null;
 
-        function calculateProfile(wearRate, friction) {
+        let wearMapCanvas, profileCanvas;
+        let wearMapCtx, profileCtx;
+
+        function generateWearData(wearRate, friction) {
             const contactPressure = FORCE / (Math.PI * DISK_R * DISK_R);
             const baseWear = (IMPACTS * wearRate * contactPressure / 10000) * (1 + friction * 0.3);
-            const hardnessReduction = (GORILLA_HARDNESS - 5) / 4;
-            const res = 100;
-            const labels = [];
+            
             const data = [];
-            
-            for (let i = 0; i < res; i++) {
-                const d = (i / res) * (GLASS_R * 1.5);
-                labels.push(d.toFixed(0));
-                let wear = 0;
-                
-                if (d <= DISK_R) {
-                    wear = baseWear * Math.exp(-(d * d) / (2 * (DISK_R / 2) ** 2));
-                } else if (d <= DISK_R * 2) {
-                    const decay = (d - DISK_R) / DISK_R;
-                    wear = baseWear * Math.exp(-decay * decay) * 0.3;
+            for (let i = 0; i < 100; i++) {
+                for (let j = 0; j < 100; j++) {
+                    const x = -GLASS_R + (i / 100) * GLASS_R * 2;
+                    const y = -GLASS_R + (j / 100) * GLASS_R * 2;
+                    const dist = Math.sqrt(x * x + y * y);
+                    let wear = 0;
+                    
+                    if (dist <= DISK_R) {
+                        wear = baseWear * Math.exp(-(dist * dist) / (2 * (DISK_R / 2) ** 2));
+                    } else if (dist <= DISK_R * 2) {
+                        const decay = (dist - DISK_R) / DISK_R;
+                        wear = baseWear * Math.exp(-decay * decay) * 0.3;
+                    }
+                    data.push(Math.min(Math.max(wear, 0), 100));
                 }
-                
-                data.push(Math.min(Math.max(wear / hardnessReduction, 0), 100));
             }
-            
-            return { labels, data };
+            return data;
         }
 
-        function calculateWearDistribution(wearRate, friction) {
+        function generateProfileData(wearRate, friction) {
             const contactPressure = FORCE / (Math.PI * DISK_R * DISK_R);
             const baseWear = (IMPACTS * wearRate * contactPressure / 10000) * (1 + friction * 0.3);
-            const hardnessReduction = (GORILLA_HARDNESS - 5) / 4;
-            const res = 60;
-            const data = [];
-            const labels = [];
             
-            for (let i = 0; i < res; i++) {
-                const d = (i / res) * (DISK_R * 2.5);
-                let wear = 0;
+            const labels = [];
+            const wears = [];
+            for (let i = 0; i < 150; i++) {
+                const d = (i / 150) * GLASS_R * 1.5;
+                labels.push(d.toFixed(1));
+                let w = 0;
                 
                 if (d <= DISK_R) {
-                    wear = baseWear * Math.exp(-(d * d) / (2 * (DISK_R / 2) ** 2));
+                    w = baseWear * Math.exp(-(d * d) / (2 * (DISK_R / 2) ** 2));
                 } else if (d <= DISK_R * 2) {
                     const decay = (d - DISK_R) / DISK_R;
-                    wear = baseWear * Math.exp(-decay * decay) * 0.3;
+                    w = baseWear * Math.exp(-decay * decay) * 0.3;
                 }
-                
-                data.push(Math.min(Math.max(wear / hardnessReduction, 0), 100));
-                labels.push(d.toFixed(0));
+                wears.push(Math.min(Math.max(w, 0), 100));
+            }
+            return { labels, wears };
+        }
+
+        function drawWearMap(data) {
+            const canvas = document.getElementById('wearMap');
+            canvas.width = 300;
+            canvas.height = 300;
+            const ctx = canvas.getContext('2d');
+            
+            const imageData = ctx.createImageData(100, 100);
+            const colors = data.map(val => {
+                let r, g, b;
+                if (val < 25) {
+                    r = 49; g = 54; b = 149;
+                } else if (val < 50) {
+                    r = 171; g = 217; b = 233;
+                } else if (val < 75) {
+                    r = 254; g = 224; b = 144;
+                } else {
+                    r = 244; g = 109; b = 67;
+                }
+                return [r, g, b, 255];
+            });
+            
+            for (let i = 0; i < data.length; i++) {
+                const [r, g, b, a] = colors[i];
+                imageData.data[i * 4] = r;
+                imageData.data[i * 4 + 1] = g;
+                imageData.data[i * 4 + 2] = b;
+                imageData.data[i * 4 + 3] = a;
             }
             
-            return { labels, data };
+            ctx.putImageData(imageData, 0, 0);
+            ctx.strokeStyle = 'red';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(150, 150, 50, 0, Math.PI * 2);
+            ctx.stroke();
+        }
+
+        function drawProfile(labels, wears) {
+            const ctx = document.getElementById('profileChart').getContext('2d');
+            
+            if (window.profileChart) window.profileChart.destroy();
+            
+            window.profileChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Wear Depth (μm)',
+                        data: wears,
+                        borderColor: 'rgb(244, 109, 67)',
+                        backgroundColor: 'rgba(244, 109, 67, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.3
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { display: true }, title: { display: true, text: 'Cross-Section Wear Profile' } },
+                    scales: { y: { beginAtZero: true, max: 100, title: { display: true, text: 'Wear (μm)' } }, x: { title: { display: true, text: 'Distance (mm)' } } }
+                }
+            });
         }
 
         function updateCharts() {
             const wearRate = parseFloat(document.getElementById('wearRate').value);
             const friction = parseFloat(document.getElementById('friction').value);
             
-            document.getElementById('wearValDisplay').textContent = wearRate.toFixed(1) + 'x';
-            document.getElementById('fricValDisplay').textContent = friction.toFixed(2);
+            document.getElementById('wearVal').textContent = wearRate.toFixed(1) + 'x';
+            document.getElementById('fricVal').textContent = friction.toFixed(2);
             
-            const profileData = calculateProfile(wearRate, friction);
-            const wearData = calculateWearDistribution(wearRate, friction);
+            const wearData = generateWearData(wearRate, friction);
+            drawWearMap(wearData);
             
-            const maxWear = Math.max(...profileData.data);
-            const avgWear = profileData.data.reduce((a, b) => a + b) / profileData.data.length;
+            const profile = generateProfileData(wearRate, friction);
+            drawProfile(profile.labels, profile.wears);
+            
+            const maxWear = Math.max(...wearData);
+            const avgWear = wearData.reduce((a, b) => a + b) / wearData.length;
             const volLoss = (maxWear / 1000) * Math.PI * DISK_R * DISK_R;
             
-            document.getElementById('stats').innerHTML = `Max Wear: ${maxWear.toFixed(1)} μm<br>Avg Wear: ${avgWear.toFixed(1)} μm<br>Volume Loss: ${volLoss.toFixed(3)} mm³`;
-            
-            // Update wear distribution
-            if (wearChart) {
-                wearChart.data.labels = wearData.labels;
-                wearChart.data.datasets[0].data = wearData.data;
-                wearChart.update();
-            } else {
-                const ctx1 = document.getElementById('wearChart').getContext('2d');
-                wearChart = new Chart(ctx1, {
-                    type: 'bar',
-                    data: {
-                        labels: wearData.labels,
-                        datasets: [{
-                            label: 'Wear Depth (μm)',
-                            data: wearData.data,
-                            backgroundColor: 'rgba(244, 109, 67, 0.7)',
-                            borderColor: 'rgba(244, 109, 67, 1)',
-                            borderWidth: 1
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: { display: true, position: 'top' },
-                            title: { display: true, text: 'Wear Distribution' }
-                        },
-                        scales: {
-                            y: { beginAtZero: true, max: 100, title: { display: true, text: 'Wear (μm)' } },
-                            x: { title: { display: true, text: 'Distance (mm)' } }
-                        }
-                    }
-                });
-            }
-            
-            // Update profile
-            if (profileChart) {
-                profileChart.data.labels = profileData.labels;
-                profileChart.data.datasets[0].data = profileData.data;
-                profileChart.update();
-            } else {
-                const ctx2 = document.getElementById('profileChart').getContext('2d');
-                profileChart = new Chart(ctx2, {
-                    type: 'line',
-                    data: {
-                        labels: profileData.labels,
-                        datasets: [{
-                            label: 'Cross-Section Wear',
-                            data: profileData.data,
-                            borderColor: 'rgb(244, 109, 67)',
-                            backgroundColor: 'rgba(244, 109, 67, 0.1)',
-                            tension: 0.3,
-                            fill: true,
-                            borderWidth: 2,
-                            pointRadius: 0,
-                            pointHoverRadius: 5
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: { display: true, position: 'top' },
-                            title: { display: true, text: 'Cross-Section Profile' }
-                        },
-                        scales: {
-                            y: { beginAtZero: true, max: 100, title: { display: true, text: 'Wear (μm)' } },
-                            x: { title: { display: true, text: 'Distance (mm)' } }
-                        }
-                    }
-                });
-            }
+            document.getElementById('maxWear').textContent = maxWear.toFixed(1);
+            document.getElementById('avgWear').textContent = avgWear.toFixed(1);
+            document.getElementById('volLoss').textContent = volLoss.toFixed(3);
         }
 
-        function resetValues() {
-            document.getElementById('wearRate').value = 1.0;
+        function reset() {
+            document.getElementById('wearRate').value = 1;
             document.getElementById('friction').value = 0.5;
-            document.getElementById('wearValDisplay').textContent = '1.0x';
-            document.getElementById('fricValDisplay').textContent = '0.5';
             updateCharts();
         }
 
-        document.getElementById('wearRate').addEventListener('input', function() {
-            document.getElementById('wearValDisplay').textContent = this.value + 'x';
-        });
-        
-        document.getElementById('friction').addEventListener('input', function() {
-            document.getElementById('fricValDisplay').textContent = this.value;
+        document.getElementById('wearRate').addEventListener('input', () => {
+            document.getElementById('wearVal').textContent = document.getElementById('wearRate').value + 'x';
         });
 
-        window.addEventListener('load', function() {
-            updateCharts();
+        document.getElementById('friction').addEventListener('input', () => {
+            document.getElementById('fricVal').textContent = parseFloat(document.getElementById('friction').value).toFixed(2);
         });
+
+        updateCharts();
     </script>
 </body>
 </html>
